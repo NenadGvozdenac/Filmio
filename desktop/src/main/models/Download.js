@@ -22,12 +22,13 @@ export class Download {
     this.season = props.season ?? null;
     this.episode = props.episode ?? null;
     this.pack = !!props.pack;
-    // TMDB info (library posters)
+    // TMDB info (library posters); tmdbChecked = looked up already (match or not)
     this.tmdbId = props.tmdbId ?? null;
     this.posterUrl = props.posterUrl ?? null;
+    this.overview = props.overview ?? '';
+    this.tmdbChecked = !!props.tmdbChecked;
 
     this.quality = props.quality ?? '';
-    this.provider = props.provider ?? '';
     this.addedAt = props.addedAt ?? Date.now();
     this.paused = !!props.paused;
     this.seeding = props.seeding !== false; // keep sharing after completion until the user stops it
@@ -65,14 +66,17 @@ export class Download {
   }
 
   /** @param {{index:number, name:string, path:string, length:number}[]} files */
-  assignFiles(files, torrentName) {
+  assignFiles(files) {
     this.files = files;
-    if (!this.quality && files[0]) this.quality = Quality.fromName(files[0].name).label;
-    if (this.title === this.infoHash && torrentName) this.title = torrentName;
+    const label = files[0] ? Quality.fromName(files[0].name).label : '?';
+    if (!this.quality && label !== '?') this.quality = label; // unknown quality: no badge
     this.error = null;
   }
 
-  /** Fills in series/movie info when the download was added without search metadata. */
+  /**
+   * Content recognized from the torrent / file names. Fields given when the download
+   * was added (e.g. a custom title) are kept.
+   */
   describe({ kind, title, year, show, season, episode, pack }) {
     if (kind) this.kind = kind;
     if (title && this.title === this.infoHash) this.title = title;
@@ -81,6 +85,26 @@ export class Download {
     if (season != null && this.season == null) this.season = season;
     if (episode != null && this.episode == null) this.episode = episode;
     if (pack) this.pack = true;
+  }
+
+  /**
+   * TMDB result for this download (or null when nothing matched).
+   * The official title replaces the name parsed from the torrent.
+   */
+  applyMetadata(match) {
+    this.tmdbChecked = true;
+    if (!match) return;
+    this.tmdbId = match.tmdbId;
+    this.posterUrl = match.posterUrl;
+    this.overview = match.overview ?? '';
+    if (this.kind === MediaKind.SERIES) {
+      const oldShow = this.show;
+      this.show = match.title;
+      if (oldShow && this.title.startsWith(oldShow)) this.title = match.title + this.title.slice(oldShow.length);
+    } else {
+      this.year = match.year || this.year;
+      this.title = match.year ? `${match.title} (${match.year})` : match.title;
+    }
   }
 
   pause() {
@@ -117,12 +141,14 @@ export class Download {
 
   toJSON() {
     const {
-      infoHash, source, dir, title, kind, year, show, season, episode, pack, tmdbId, posterUrl,
-      quality, provider, addedAt, paused, seeding, done, doneAt, error, files,
+      infoHash, source, dir, title, kind, year, show, season, episode, pack,
+      tmdbId, posterUrl, overview, tmdbChecked,
+      quality, addedAt, paused, seeding, done, doneAt, error, files,
     } = this;
     return {
-      infoHash, source, dir, title, kind, year, show, season, episode, pack, tmdbId, posterUrl,
-      quality, provider, addedAt, paused, seeding, done, doneAt, error, files,
+      infoHash, source, dir, title, kind, year, show, season, episode, pack,
+      tmdbId, posterUrl, overview, tmdbChecked,
+      quality, addedAt, paused, seeding, done, doneAt, error, files,
     };
   }
 }

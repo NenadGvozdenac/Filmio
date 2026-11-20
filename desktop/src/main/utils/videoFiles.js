@@ -1,8 +1,9 @@
 // Rules for video files inside a torrent.
 import { parseEpisode } from './releaseName.js';
 
-export const PLAYABLE_EXTENSIONS = ['.mp4', '.m4v', '.webm'];
-export const VIDEO_EXTENSIONS = [...PLAYABLE_EXTENSIONS, '.mkv', '.avi', '.mov'];
+// MKV plays when it contains codecs Chromium supports (H.264 / VP9 / AV1 video, AAC / Opus / MP3 audio).
+export const PLAYABLE_EXTENSIONS = ['.mp4', '.m4v', '.webm', '.mkv'];
+export const VIDEO_EXTENSIONS = [...PLAYABLE_EXTENSIONS, '.avi', '.mov'];
 
 export const MIME_TYPES = {
   '.mp4': 'video/mp4',

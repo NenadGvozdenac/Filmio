@@ -3,7 +3,7 @@ import { icon } from '../utils/icons.js';
 import { formatBytes, formatPercent, episodeLabel } from '../utils/format.js';
 import { t, onLanguageChange } from '../i18n/i18n.js';
 import * as downloads from '../services/downloadService.js';
-import { collapsible } from './components/seriesResults.js';
+import { collapsible } from './components/collapsible.js';
 
 const normalize = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 

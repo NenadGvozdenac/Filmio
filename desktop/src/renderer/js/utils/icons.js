@@ -42,6 +42,10 @@ import CirclePlay from '../../../../node_modules/lucide/dist/esm/icons/circle-pl
 import SkipBack from '../../../../node_modules/lucide/dist/esm/icons/skip-back.mjs';
 import SkipForward from '../../../../node_modules/lucide/dist/esm/icons/skip-forward.mjs';
 import Keyboard from '../../../../node_modules/lucide/dist/esm/icons/keyboard.mjs';
+import RadioTower from '../../../../node_modules/lucide/dist/esm/icons/radio-tower.mjs';
+import Star from '../../../../node_modules/lucide/dist/esm/icons/star.mjs';
+import RefreshCw from '../../../../node_modules/lucide/dist/esm/icons/refresh-cw.mjs';
+import ExternalLink from '../../../../node_modules/lucide/dist/esm/icons/external-link.mjs';
 
 const ICONS = {
   'arrow-down': ArrowDown,
@@ -86,6 +90,10 @@ const ICONS = {
   'skip-back': SkipBack,
   'skip-forward': SkipForward,
   keyboard: Keyboard,
+  'radio-tower': RadioTower,
+  star: Star,
+  'refresh-cw': RefreshCw,
+  'external-link': ExternalLink,
 };
 
 /**

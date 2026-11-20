@@ -39,20 +39,6 @@ export function initDownloadsView(actions) {
 
   $('#open-folder').addEventListener('click', () => openDownloadFolder().catch(toastError));
 
-  $('#magnet-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const input = $('#magnet-input');
-    const source = input.value.trim();
-    if (!source) return;
-    try {
-      await downloads.addDownload(source, {});
-      input.value = '';
-      toast(t('downloads.added'));
-    } catch (err) {
-      toastError(err);
-    }
-  });
-
   /** Runs an action, then refreshes the list immediately instead of waiting for the next tick. */
   const run = (fn) => async () => {
     try {

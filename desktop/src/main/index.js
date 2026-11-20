@@ -5,17 +5,17 @@ import { JsonFileStore } from './repositories/JsonFileStore.js';
 import { SettingsRepository } from './repositories/SettingsRepository.js';
 import { DownloadRepository } from './repositories/DownloadRepository.js';
 import { TorrentFileRepository } from './repositories/TorrentFileRepository.js';
-import { ArchiveProvider } from './providers/ArchiveProvider.js';
-import { TorznabProvider } from './providers/TorznabProvider.js';
 import { TmdbProvider } from './providers/TmdbProvider.js';
 import { SettingsService } from './services/SettingsService.js';
-import { SearchService } from './services/SearchService.js';
 import { TorrentService } from './services/TorrentService.js';
 import { StreamService } from './services/StreamService.js';
 import { DownloadService } from './services/DownloadService.js';
+import { MetadataService } from './services/MetadataService.js';
 import { StartupService } from './services/StartupService.js';
-import { SearchController } from './controllers/SearchController.js';
+import { HlsProxyService } from './services/HlsProxyService.js';
+import { LiveTvService } from './services/LiveTvService.js';
 import { DownloadController } from './controllers/DownloadController.js';
+import { LiveTvController } from './controllers/LiveTvController.js';
 import { SettingsController } from './controllers/SettingsController.js';
 import { SystemController } from './controllers/SystemController.js';
 import { WindowController } from './controllers/WindowController.js';
@@ -29,6 +29,7 @@ let mainWindow = null;
 let torrentService = null;
 let streamService = null;
 let settingsService = null;
+let hlsProxy = null;
 let tray = null;
 
 // Groups the taskbar button and notifications under Filmio's own icon on Windows.
@@ -39,16 +40,6 @@ const isPrimaryInstance = app.requestSingleInstanceLock();
 if (!isPrimaryInstance) app.quit();
 else app.on('second-instance', () => showMainWindow());
 
-/** Builds the enabled search providers from the current settings. */
-function createProviders(settings) {
-  const providers = [];
-  if (settings.archiveEnabled) providers.push(new ArchiveProvider());
-  for (const indexer of settings.indexers) {
-    if (indexer.enabled) providers.push(new TorznabProvider(indexer));
-  }
-  return providers;
-}
-
 async function bootstrap() {
   // Repositories
   const store = new JsonFileStore(config.stateFile);
@@ -58,11 +49,11 @@ async function bootstrap() {
 
   // Services
   settingsService = new SettingsService(settingsRepository);
-  const searchService = new SearchService(
+  const metadataService = new MetadataService({
     settingsService,
-    createProviders,
-    (settings) => (settings.tmdbApiKey ? new TmdbProvider({ apiKey: settings.tmdbApiKey }) : null),
-  );
+    downloadRepository,
+    createTmdb: (apiKey) => new TmdbProvider({ apiKey }),
+  });
   torrentService = new TorrentService();
   streamService = new StreamService(torrentService);
   await streamService.start();
@@ -72,14 +63,26 @@ async function bootstrap() {
     settingsService,
     torrentService,
     streamService,
+    onReady: (infoHash) => metadataService.enrich(infoHash),
   });
   const startupService = new StartupService(app);
+  hlsProxy = new HlsProxyService();
+  await hlsProxy.start();
+  const liveTvService = new LiveTvService({ settingsService, proxy: hlsProxy });
 
   // Controllers + routes
+  let tmdbKey = settingsService.get().tmdbApiKey;
+  const onSettingsChanged = (next) => {
+    tray?.refresh(); // tray labels follow the language
+    if (next.tmdbApiKey !== tmdbKey) {
+      tmdbKey = next.tmdbApiKey;
+      metadataService.retryUnmatched();
+    }
+  };
   registerIpcRoutes(ipcMain, {
-    search: new SearchController(searchService),
     downloads: new DownloadController(downloadService),
-    settings: new SettingsController(settingsService, startupService, () => tray?.refresh()),
+    live: new LiveTvController(liveTvService),
+    settings: new SettingsController(settingsService, startupService, onSettingsChanged),
     system: new SystemController(() => mainWindow, settingsService),
     window: new WindowController(() => mainWindow),
   });
@@ -106,6 +109,7 @@ async function bootstrap() {
   }, config.progressIntervalMs);
 
   downloadService.restore();
+  metadataService.enrichAll(); // posters for downloads that were added before the TMDB key was set
 }
 
 if (isPrimaryInstance) {
@@ -149,6 +153,7 @@ app.on('before-quit', (event) => {
   quitting = true;
   for (const win of BrowserWindow.getAllWindows()) win.destroy();
   streamService?.stop();
+  hlsProxy?.stop();
   tray?.destroy();
   const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
   Promise.race([torrentService.destroy(), timeout]).finally(() => app.exit(0));

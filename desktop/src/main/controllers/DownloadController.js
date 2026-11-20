@@ -9,7 +9,6 @@ function requireHash(infoHash) {
 }
 
 const text = (value, max) => String(value ?? '').trim().slice(0, max) || undefined;
-const int = (value) => (Number.isInteger(value) && value >= 0 && value < 1e9 ? value : undefined);
 
 export class DownloadController {
   /** @param {import('../services/DownloadService.js').DownloadService} downloadService */
@@ -18,23 +17,11 @@ export class DownloadController {
   }
 
   add({ source, meta } = {}) {
-    if (!source || typeof source !== 'string') throw new AppError(ErrorCode.MISSING_SOURCE, 'Missing source (magnet or .torrent URL)');
-    // Without metadata (e.g. a pasted magnet) the kind is inferred from the file names later.
-    const safeMeta = Object.fromEntries(Object.entries({
-      title: text(meta?.title, 300),
-      kind: meta?.kind === 'series' ? 'series' : meta?.kind === 'movie' ? 'movie' : undefined,
-      year: text(meta?.year, 4),
-      show: text(meta?.show, 300),
-      season: int(meta?.season),
-      episode: int(meta?.episode),
-      pack: meta?.pack === true ? true : undefined,
-      tmdbId: int(meta?.tmdbId),
-      // Only TMDB image URLs are accepted (the page CSP allows no other remote images).
-      posterUrl: /^https:\/\/image\.tmdb\.org\/t\/p\/[\w/.-]+$/.test(meta?.posterUrl ?? '') ? meta.posterUrl : undefined,
-      quality: text(meta?.quality, 20),
-      provider: text(meta?.provider, 100),
-    }).filter(([, value]) => value !== undefined));
-    return this.downloadService.add(source, safeMeta);
+    const value = String(source ?? '').trim();
+    if (!value || value.length > 8192) throw new AppError(ErrorCode.MISSING_SOURCE, 'Missing source (magnet link or .torrent)');
+    // Movie / series info is recognized from the torrent names once metadata arrives.
+    const title = text(meta?.title, 300);
+    return this.downloadService.add(value, title ? { title } : {});
   }
 
   list() {

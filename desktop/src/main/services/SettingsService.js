@@ -1,4 +1,6 @@
-const EDITABLE_FIELDS = ['downloadDir', 'archiveEnabled', 'mp4Only', 'indexers', 'language', 'theme', 'startFullscreen', 'launchOnStartup', 'keybinds', 'tmdbApiKey'];
+const EDITABLE_FIELDS = [
+  'downloadDir', 'language', 'theme', 'startFullscreen', 'launchOnStartup', 'keybinds', 'tmdbApiKey', 'playlists', 'favoriteChannels',
+];
 
 export class SettingsService {
   /** @param {import('../repositories/SettingsRepository.js').SettingsRepository} settingsRepository */

@@ -27,22 +27,12 @@ export async function refresh() {
   return snapshot;
 }
 
-/** Adds a release (or a raw magnet/URL) to the download folder. Resolves with infoHash. */
-export function addDownload(source, meta = {}) {
-  return invoke('downloads:add', { source, meta });
-}
-
 /**
- * Builds download metadata from a search release and its context
- * ({ title, kind, year, show, season, episode, pack, tmdbId, posterUrl }).
+ * Adds a magnet link, .torrent URL or local .torrent path to the download folder.
+ * Resolves with the infoHash.
  */
-export function metaFromRelease(release, context) {
-  const { title, kind, year, show, season, episode, pack, tmdbId, posterUrl } = context;
-  return {
-    title, kind, year, show, season, episode, pack, tmdbId, posterUrl,
-    quality: release.quality?.label ?? '',
-    provider: release.provider,
-  };
+export function addDownload(source) {
+  return invoke('downloads:add', { source });
 }
 
 export const getPlayableFiles = (infoHash) => invoke('downloads:files', { infoHash });

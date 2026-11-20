@@ -33,6 +33,24 @@ export class SystemController {
     return { name: path.basename(file), url: pathToFileURL(file).href };
   }
 
+  /** Lets the user pick one or more .torrent files; returns their paths. */
+  async openTorrentFiles() {
+    const result = await dialog.showOpenDialog(this.getWindow(), {
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'Torrent', extensions: ['torrent'] }],
+    });
+    return result.canceled ? [] : result.filePaths;
+  }
+
+  /** Lets the user pick a local M3U playlist; returns its path or null. */
+  async openPlaylistFile() {
+    const result = await dialog.showOpenDialog(this.getWindow(), {
+      properties: ['openFile'],
+      filters: [{ name: 'M3U playlist', extensions: ['m3u', 'm3u8'] }],
+    });
+    return result.canceled ? null : result.filePaths[0];
+  }
+
   async openDownloadFolder() {
     const dir = this.settingsService.get().downloadDir;
     fs.mkdirSync(dir, { recursive: true });

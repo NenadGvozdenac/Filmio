@@ -4,7 +4,7 @@ import { toast, toastError } from '../utils/toast.js';
 import { t, setLanguage, onLanguageChange } from '../i18n/i18n.js';
 import { applyTheme } from '../services/themeService.js';
 import { getSettings, updateSettings } from '../services/settingsService.js';
-import { chooseDirectory, openExternal } from '../services/systemService.js';
+import { chooseDirectory, openExternal, openPlaylistFile } from '../services/systemService.js';
 import { onTabChange } from './tabs.js';
 import {
   DEFAULT_KEYBINDS, KEYBIND_ACTIONS, getKeybinds, setKeybinds, keyFromEvent, keyLabel,
@@ -93,62 +93,71 @@ function initKeybindEditor() {
 }
 
 /**
- * Settings tab. Appearance and startup options apply (and persist) immediately;
- * everything else is saved with the Save button.
+ * Settings tab. Appearance, startup options and shortcuts apply (and persist) immediately;
+ * the download folder, live TV playlists and the TMDB key are saved with the Save button.
  * @param {object} initial settings loaded at startup
  */
 export function initSettingsView(initial) {
   const languageSelect = $('#set-language');
   const themeSelect = $('#set-theme');
   const startFullscreenInput = $('#set-start-fullscreen');
-  const launchStartupInput = $('#set-launch-startup');  const dirInput = $('#set-dir');
-  const mp4Input = $('#set-mp4');
-  const archiveInput = $('#set-archive');
+  const launchStartupInput = $('#set-launch-startup');
+  const dirInput = $('#set-dir');
   const tmdbInput = $('#set-tmdb');
-  const indexersEl = $('#indexers');
+  const playlistsEl = $('#playlists');
 
-  function indexerRow(ix = { name: '', url: '', apiKey: '', enabled: true }) {
-    const row = h('div', { class: 'indexer' },
-      h('input', { class: 'switch', type: 'checkbox', role: 'switch', checked: ix.enabled, dataset: { field: 'enabled' } }),
-      h('input', { class: 'input', type: 'text', value: ix.name, dataset: { field: 'name' } }),
-      h('input', { class: 'input', type: 'text', value: ix.url, dataset: { field: 'url' } }),
-      h('input', { class: 'input', type: 'password', value: ix.apiKey, dataset: { field: 'apiKey' } }),
-      h('button', { class: 'btn btn-ghost btn-icon', onClick: () => row.remove() }, icon('x')),
+  /** One editable M3U playlist row: enabled switch, name, URL / file path, remove. */
+  function playlistRow(playlist = { name: '', url: '', enabled: true }) {
+    const row = h('div', { class: 'playlist-row' },
+      h('input', { class: 'switch', type: 'checkbox', role: 'switch', checked: playlist.enabled, dataset: { field: 'enabled' } }),
+      h('input', { class: 'input', type: 'text', value: playlist.name, dataset: { field: 'name' } }),
+      h('input', { class: 'input', type: 'text', value: playlist.url, spellcheck: 'false', dataset: { field: 'url' } }),
+      h('button', { class: 'btn btn-ghost btn-icon', type: 'button', onClick: () => row.remove() }, icon('x')),
     );
-    translateIndexerRow(row);
+    translatePlaylistRow(row);
     return row;
   }
 
-  function translateIndexerRow(row) {
+  function translatePlaylistRow(row) {
     const field = (name) => row.querySelector(`[data-field="${name}"]`);
-    field('enabled').title = t('settings.indexerEnabled');
-    field('name').placeholder = t('settings.indexerName');
-    field('url').placeholder = t('settings.indexerUrl');
-    field('apiKey').placeholder = t('settings.indexerKey');
-    row.querySelector('button').title = t('settings.indexerRemove');
+    field('enabled').title = t('settings.playlistEnabled');
+    field('name').placeholder = t('settings.playlistName');
+    field('url').placeholder = t('settings.playlistUrl');
+    row.querySelector('button').title = t('settings.playlistRemove');
   }
 
-  function readIndexers() {
-    return [...indexersEl.querySelectorAll('.indexer')].map((row) => {
+  function readPlaylists() {
+    return [...playlistsEl.querySelectorAll('.playlist-row')].map((row) => {
       const field = (name) => row.querySelector(`[data-field="${name}"]`);
-      return {
-        enabled: field('enabled').checked,
-        name: field('name').value.trim(),
-        url: field('url').value.trim(),
-        apiKey: field('apiKey').value.trim(),
-      };
-    }).filter((ix) => ix.url);
+      return { enabled: field('enabled').checked, name: field('name').value.trim(), url: field('url').value.trim() };
+    }).filter((p) => p.url);
   }
+
+  $('#add-playlist').addEventListener('click', () => {
+    const row = playlistRow();
+    playlistsEl.append(row);
+    row.querySelector('[data-field="url"]').focus();
+  });
+
+  $('#add-playlist-file').addEventListener('click', async () => {
+    try {
+      const file = await openPlaylistFile();
+      if (file) playlistsEl.append(playlistRow({ name: '', url: file, enabled: true }));
+    } catch (err) {
+      toastError(err);
+    }
+  });
+
+  onLanguageChange(() => playlistsEl.querySelectorAll('.playlist-row').forEach(translatePlaylistRow));
 
   function fill(settings) {
     languageSelect.value = settings.language;
     themeSelect.value = settings.theme;
     startFullscreenInput.checked = settings.startFullscreen;
-    launchStartupInput.checked = settings.launchOnStartup;    dirInput.value = settings.downloadDir;
-    mp4Input.checked = settings.mp4Only;
-    archiveInput.checked = settings.archiveEnabled;
+    launchStartupInput.checked = settings.launchOnStartup;
+    dirInput.value = settings.downloadDir;
     tmdbInput.value = settings.tmdbApiKey ?? '';
-    clear(indexersEl).append(...settings.indexers.map(indexerRow));
+    clear(playlistsEl).append(...(settings.playlists ?? []).map(playlistRow));
   }
 
   languageSelect.addEventListener('change', () => {
@@ -173,7 +182,6 @@ export function initSettingsView(initial) {
   });
   saveToggle(startFullscreenInput, 'startFullscreen');
   saveToggle(launchStartupInput, 'launchOnStartup');
-  $('#add-indexer').addEventListener('click', () => indexersEl.append(indexerRow()));
 
   $('#tmdb-get-key').addEventListener('click', () => {
     openExternal('https://www.themoviedb.org/settings/api').catch(toastError);
@@ -189,19 +197,11 @@ export function initSettingsView(initial) {
   });
 
   $('#save-settings').addEventListener('click', async () => {
-    const indexers = readIndexers();
-    const invalid = indexers.find((ix) => !/^https?:\/\//i.test(ix.url));
-    if (invalid) {
-      toastError(t('settings.invalidUrl', { url: invalid.url }));
-      return;
-    }
     try {
       const saved = await updateSettings({
         downloadDir: dirInput.value,
-        mp4Only: mp4Input.checked,
-        archiveEnabled: archiveInput.checked,
         tmdbApiKey: tmdbInput.value.trim(),
-        indexers,
+        playlists: readPlaylists(),
       });
       fill(saved);
       toast(t('settings.saved'));
@@ -210,7 +210,6 @@ export function initSettingsView(initial) {
     }
   });
 
-  onLanguageChange(() => indexersEl.querySelectorAll('.indexer').forEach(translateIndexerRow));
   initKeybindEditor();
 
   if (initial) fill(initial);

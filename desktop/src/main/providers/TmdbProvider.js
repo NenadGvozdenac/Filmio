@@ -1,5 +1,5 @@
-// The Movie Database (TMDB): identifies what the user is looking for (movie or TV show,
-// official title, year, poster). Releases themselves still come from the torrent providers.
+// The Movie Database (TMDB): finds the official title, poster and overview for content
+// recognized from torrent names (used by MetadataService for the library).
 import { AppError, ErrorCode } from '../utils/AppError.js';
 
 const API = 'https://api.themoviedb.org/3';
@@ -42,28 +42,6 @@ export class TmdbProvider {
    * @property {string|null} posterUrl
    * @property {number} rating        0..10
    */
-  /**
-   * Seasons, latest / next episode and alternative titles of a TV show.
-   * @returns {Promise<{seasons:{number:number,name:string,episodeCount:number,airDate:string}[],
-   *   lastEpisode:EpisodeInfo|null, nextEpisode:EpisodeInfo|null, altTitles:string[]}>}
-   * @typedef {{season:number, episode:number, name:string, airDate:string}} EpisodeInfo
-   */
-  async getShowDetails(tmdbId) {
-    const data = await this.#get(`/tv/${tmdbId}`, { language: 'en-US', append_to_response: 'alternative_titles' });
-    const episode = (e) => (e ? { season: e.season_number, episode: e.episode_number, name: e.name ?? '', airDate: e.air_date ?? '' } : null);
-    return {
-      seasons: (data.seasons ?? []).map((s) => ({
-        number: s.season_number,
-        name: s.name ?? '',
-        episodeCount: s.episode_count ?? 0,
-        airDate: s.air_date ?? '',
-      })),
-      lastEpisode: episode(data.last_episode_to_air),
-      nextEpisode: episode(data.next_episode_to_air),
-      altTitles: (data.alternative_titles?.results ?? []).map((a) => a.title).filter(Boolean),
-    };
-  }
-
   async searchTitles(query) {
     const data = await this.#get('/search/multi', { query, include_adult: 'false', language: 'en-US', page: '1' });
     return (data.results ?? [])

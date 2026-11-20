@@ -1,11 +1,11 @@
 // Renderer entry point: applies language/theme, initializes views and connects shared actions.
 import { initTabs } from './views/tabs.js';
-import { initSearchView } from './views/searchView.js';
+import { initAddView } from './views/addView.js';
 import { initLibraryView } from './views/libraryView.js';
+import { initLiveView } from './views/liveView.js';
 import { initDownloadsView } from './views/downloadsView.js';
 import { initPlayerView } from './views/playerView.js';
 import { initSettingsView } from './views/settingsView.js';
-import { addDownload, metaFromRelease } from './services/downloadService.js';
 import { getSettings } from './services/settingsService.js';
 import { applyTheme } from './services/themeService.js';
 import { setKeybinds } from './services/keybindService.js';
@@ -13,7 +13,7 @@ import { toggleAppFullscreen, exitAppFullscreen, isAppFullscreen, onAppFullscree
 import { t, setLanguage, applyTranslations, onLanguageChange } from './i18n/i18n.js';
 import { hydrateIcons, setIcon } from './utils/icons.js';
 import { $ } from './utils/dom.js';
-import { toast, toastError } from './utils/toast.js';
+import { toastError } from './utils/toast.js';
 
 /** Sidebar "Fullscreen" item, F11 to toggle and Esc to leave app fullscreen. */
 function initAppFullscreen() {
@@ -66,33 +66,11 @@ async function main() {
   initAppFullscreen();
   const player = initPlayerView();
 
-  /** Actions used by the search results (movies and series). */
-  const releaseActions = {
-    /** Adds the release to downloads and starts streaming it in the player. */
-    async watch(release, context) {
-      try {
-        const infoHash = await addDownload(release.source, metaFromRelease(release, context));
-        await player.playTorrent(infoHash, { ...context, release });
-      } catch (err) {
-        toastError(err);
-      }
-    },
-
-    /** Adds the release to the download folder only. */
-    async download(release, context) {
-      try {
-        await addDownload(release.source, metaFromRelease(release, context));
-        toast(t('downloads.addedRelease', { title: context.title, quality: release.quality.label }));
-      } catch (err) {
-        toastError(err);
-      }
-    },
-  };
-
   const play = (infoHash, context) => player.playTorrent(infoHash, context);
 
-  initSearchView(releaseActions);
+  initAddView({ play });
   initLibraryView({ play });
+  initLiveView({ playLive: (channel, list) => player.playLive(channel, list) });
   initDownloadsView({ play });
   initSettingsView(settings);
 }

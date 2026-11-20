@@ -9,13 +9,13 @@ export function loadConfig(app) {
     torrentCacheDir: path.join(dataDir, 'torrents'),
     defaultSettings: {
       downloadDir: path.join(app.getPath('downloads'), 'Filmio'),
-      archiveEnabled: true,
-      mp4Only: true,
-      indexers: [],
       language: 'en',
       theme: 'system',
       startFullscreen: false,
       launchOnStartup: false,
+      tmdbApiKey: '',
+      playlists: [],
+      favoriteChannels: [],
     },
     progressIntervalMs: 1000,
   };

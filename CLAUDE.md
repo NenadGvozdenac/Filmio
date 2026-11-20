@@ -1,6 +1,6 @@
 # Filmio
 
-Electron desktop app (in `desktop/`) for searching, downloading and streaming movies/series over BitTorrent. Run with `make start`.
+Electron desktop app (in `desktop/`): a torrent client and player for movies/series. The user adds magnet links / .torrent files (there is no built-in search; it was removed on purpose, see commit 4a7cb62). Run with `make start`.
 
 ## Rules
 

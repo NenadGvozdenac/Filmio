@@ -20,19 +20,22 @@ export class DownloadService {
    * @param {import('./SettingsService.js').SettingsService} deps.settingsService
    * @param {import('./TorrentService.js').TorrentService} deps.torrentService
    * @param {import('./StreamService.js').StreamService} deps.streamService
+   * @param {(infoHash:string) => void} [deps.onReady] called once a new download knows its files
    */
-  constructor({ downloadRepository, torrentFileRepository, settingsService, torrentService, streamService }) {
+  constructor({ downloadRepository, torrentFileRepository, settingsService, torrentService, streamService, onReady = () => {} }) {
     this.downloads = downloadRepository;
     this.torrentFiles = torrentFileRepository;
     this.settings = settingsService;
     this.torrents = torrentService;
     this.streams = streamService;
+    this.onReady = onReady;
   }
 
   /**
-   * Adds a release to the download folder (everything goes into one folder).
-   * @param {string} source magnet / .torrent URL / info hash
-   * @param {{title?, kind?, year?, show?, season?, episode?, pack?, quality?, provider?}} meta
+   * Adds a magnet link / .torrent URL / .torrent file to the download folder (everything
+   * goes into one folder). Movie / series info is recognized from the names later.
+   * @param {string} source magnet link, .torrent URL, local .torrent path or info hash
+   * @param {{title?:string}} [meta]
    * @returns {Promise<string>} infoHash
    */
   async add(source, meta = {}) {
@@ -171,9 +174,10 @@ export class DownloadService {
       .map((f, index) => ({ ...f, index }))
       .filter((f) => isVideo(f.name))
       .map((f) => describe(f, this.streams.urlFor(infoHash, f.index)));
-    const current = this.downloads.get(infoHash);
-    const defaultIndex = current?.fileIndexes[0] ?? pickDownloadFileIndexes(meta.files)[0];
-    return { infoHash, title: download.title, defaultIndex, files };
+    // Re-read: the title / show are recognized from the names once metadata arrived.
+    const current = this.downloads.get(infoHash) ?? download;
+    const defaultIndex = current.fileIndexes[0] ?? pickDownloadFileIndexes(meta.files)[0];
+    return { infoHash, title: current.title, show: current.show, defaultIndex, files };
   }
 
   // ---- internals ----
@@ -210,14 +214,17 @@ export class DownloadService {
       return;
     }
 
+    const isFirstTime = !download.hasFiles;
     download.assignFiles(indexes.map((index) => {
       const f = meta.files[index];
       return { index, name: f.name, path: path.join(download.dir, f.path), length: f.length };
-    }), meta.name);
+    }));
     download.describe(this.#describeContent(meta.name, download.files));
+    if (download.title === infoHash) download.title = meta.name;
     this.torrents.selectOnly(infoHash, indexes);
     this.torrentFiles.save(infoHash, meta.torrentFile);
     this.downloads.save(download);
+    if (isFirstTime) this.onReady(infoHash); // e.g. TMDB poster lookup
 
     this.torrents.onFilesDone(infoHash, indexes, () => {
       const d = this.downloads.get(infoHash);
@@ -263,16 +270,18 @@ export class DownloadService {
     const fromName = parseEpisode(torrentName);
     if (episodes.length || fromName) {
       const first = episodes[0] ?? fromName;
-      return {
-        kind: MediaKind.SERIES,
-        show: parseTitle(torrentName).title || parseTitle(files[0].name).title,
-        season: first?.season ?? null,
-        episode: files.length === 1 ? first?.episode ?? null : null,
-        pack: files.length > 1,
-      };
+      const show = parseTitle(torrentName).title || parseTitle(files[0].name).title;
+      const season = first?.season ?? null;
+      const episode = files.length === 1 ? first?.episode ?? null : null;
+      const pad = (n) => String(n).padStart(2, '0');
+      let label = '';
+      if (season != null && episode != null) label = ` S${pad(season)}E${pad(episode)}`;
+      else if (episode != null) label = ` E${pad(episode)}`;
+      else if (season != null && new Set(episodes.map((e) => e.season)).size <= 1) label = ` S${pad(season)}`;
+      return { kind: MediaKind.SERIES, title: `${show}${label}`, show, season, episode, pack: files.length > 1 };
     }
     const { title, year } = parseTitle(torrentName);
-    return { title: year ? `${title} (${year})` : title, year };
+    return { kind: MediaKind.MOVIE, title: year ? `${title} (${year})` : title, year };
   }
 
   #fail(infoHash, error) {

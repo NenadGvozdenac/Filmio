@@ -1,7 +1,7 @@
 import { $$ } from '../utils/dom.js';
 
 const listeners = new Set();
-let current = 'search';
+let current = 'add';
 
 /** Sidebar navigation: every element with data-tab switches the visible view. */
 export function initTabs() {
