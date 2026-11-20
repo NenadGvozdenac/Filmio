@@ -1,0 +1,26 @@
+{
+  "name": "filmio",
+  "productName": "Filmio",
+  "version": "1.0.0",
+  "description": "Desktop app for searching, downloading and watching movies and series over BitTorrent",
+  "main": "src/main/index.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "icons": "electron scripts/build-icons.mjs"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "fast-xml-parser": "^5.12.1",
+    "lucide": "^1.77.0",
+    "webtorrent": "^3.0.21"
+  },
+  "devDependencies": {
+    "electron": "^45.4.1"
+  },
+  "overrides": {
+    "ip": "file:./shims/ip"
+  }
+}

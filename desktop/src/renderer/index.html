@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: https://image.tmdb.org; media-src 'self' file: http://127.0.0.1:*; connect-src 'self'" />
+  <title>Filmio</title>
+  <link rel="stylesheet" href="../../node_modules/@fontsource-variable/inter/index.css" />
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <!-- Sidebar navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img class="sidebar-logo" src="../../assets/icon.svg" alt="" />
+      <div class="sidebar-brand">Filmio <small data-i18n="nav.tagline"></small></div>
+    </div>
+
+    <nav class="sidebar-group" id="nav">
+      <button class="nav-item active" data-tab="search"><i data-icon="search"></i><span data-i18n="tabs.search"></span></button>
+      <button class="nav-item" data-tab="library"><i data-icon="library"></i><span data-i18n="tabs.library"></span></button>
+      <button class="nav-item" data-tab="downloads"><i data-icon="download"></i><span data-i18n="tabs.downloads"></span><span class="nav-badge" id="downloads-count" hidden></span></button>
+      <button class="nav-item" data-tab="player"><i data-icon="monitor-play"></i><span data-i18n="tabs.player"></span></button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" data-tab="settings"><i data-icon="settings"></i><span data-i18n="tabs.settings"></span></button>
+      <button class="nav-item" id="app-fullscreen"><i data-icon="maximize"></i><span id="app-fullscreen-label" data-i18n="nav.fullscreen"></span></button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- Search (movies + series) -->
+    <section class="view active" id="view-search">
+      <div class="view-inner">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title" data-i18n="tabs.search"></h1>
+            <p class="page-description" data-i18n="pages.searchDescription"></p>
+          </div>
+        </div>
+        <form class="search-bar" id="search-form">
+          <div class="input-group">
+            <i data-icon="search"></i>
+            <input class="input" type="search" id="search-query" data-i18n-placeholder="search.placeholder" autocomplete="off" />
+          </div>
+          <button type="submit" class="btn btn-default" data-i18n="search.submit"></button>
+        </form>
+        <div class="search-status" id="search-status"></div>
+        <div class="results" id="search-results"></div>
+      </div>
+    </section>
+
+    <!-- Library (downloaded movies + series) -->
+    <section class="view" id="view-library">
+      <div class="view-inner">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title" data-i18n="tabs.library"></h1>
+            <p class="page-description" data-i18n="pages.libraryDescription"></p>
+          </div>
+          <div class="tabs-list" id="library-filter">
+            <button class="tabs-trigger active" data-filter="all" data-i18n="library.all"></button>
+            <button class="tabs-trigger" data-filter="movie" data-i18n="library.movies"></button>
+            <button class="tabs-trigger" data-filter="series" data-i18n="library.series"></button>
+          </div>
+        </div>
+        <div id="library-content"></div>
+        <div class="empty" id="library-empty"><i data-icon="library"></i><span data-i18n="library.empty"></span></div>
+      </div>
+    </section>
+
+    <!-- Downloads -->
+    <section class="view" id="view-downloads">
+      <div class="view-inner">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title" data-i18n="tabs.downloads"></h1>
+            <p class="page-description" data-i18n="pages.downloadsDescription"></p>
+          </div>
+          <button class="btn btn-outline" id="open-folder"><i data-icon="folder-open"></i><span data-i18n="downloads.openFolder"></span></button>
+        </div>
+        <form class="search-bar" id="magnet-form">
+          <div class="input-group">
+            <i data-icon="link"></i>
+            <input class="input" type="text" id="magnet-input" data-i18n-placeholder="downloads.magnetPlaceholder" autocomplete="off" />
+          </div>
+          <button type="submit" class="btn btn-secondary"><i data-icon="plus"></i><span data-i18n="downloads.add"></span></button>
+        </form>
+        <div class="toolbar">
+          <div class="tabs-list" id="downloads-filter">
+            <button class="tabs-trigger active" data-filter="all" data-i18n="downloads.all"></button>
+            <button class="tabs-trigger" data-filter="active" data-i18n="downloads.active"></button>
+            <button class="tabs-trigger" data-filter="seeding" data-i18n="downloads.seedingFilter"></button>
+            <button class="tabs-trigger" data-filter="completed" data-i18n="downloads.completed"></button>
+          </div>
+        </div>
+        <div class="downloads" id="downloads-list"></div>
+        <div class="empty" id="downloads-empty"><i data-icon="download"></i><span data-i18n="downloads.empty"></span></div>
+      </div>
+    </section>
+
+    <!-- Player -->
+    <section class="view" id="view-player">
+      <div class="player" id="player">
+        <video id="video" preload="auto"></video>
+        <div class="player-overlay" id="player-overlay">
+          <i data-icon="loader" data-size="32" class="spinner" id="player-spinner"></i>
+          <div class="player-message" id="player-message"></div>
+          <button class="btn btn-outline" id="open-local"><i data-icon="file-video"></i><span data-i18n="player.openLocal"></span></button>
+        </div>
+        <div class="player-top" id="player-top">
+          <div class="player-title" id="player-title"></div>
+          <div class="player-stats" id="player-stats"></div>
+        </div>
+        <div class="controls" id="controls">
+          <div class="seek">
+            <div class="seek-buffer" id="seek-buffer"></div>
+            <input class="slider" type="range" id="seek" min="0" max="1000" value="0" step="1" />
+          </div>
+          <div class="controls-row">
+            <button class="ctl" id="btn-prev"><i data-icon="skip-back" data-size="20"></i></button>
+            <button class="ctl" id="btn-play"><i data-icon="play" data-size="20"></i></button>
+            <button class="ctl" id="btn-next"><i data-icon="skip-forward" data-size="20"></i></button>
+            <button class="ctl" id="btn-back"><i data-icon="rotate-ccw" data-size="22"></i><span class="ctl-label">10</span></button>
+            <button class="ctl" id="btn-forward"><i data-icon="rotate-cw" data-size="22"></i><span class="ctl-label">10</span></button>
+            <div class="volume">
+              <button class="ctl" id="btn-mute"><i data-icon="volume-2" data-size="20"></i></button>
+              <input class="slider" type="range" id="volume" min="0" max="1" step="0.05" value="1" />
+            </div>
+            <span class="time" id="time">0:00 / 0:00</span>
+            <span class="spacer"></span>
+            <select class="select" id="episode" data-i18n-title="player.episode"></select>
+            <select class="select" id="speed" data-i18n-title="player.speed">
+              <option value="0.5">0.5x</option>
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>1x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x</option>
+            </select>
+            <select class="select" id="quality" data-i18n-title="player.quality"></select>
+            <button class="ctl" id="btn-fullscreen"><i data-icon="expand" data-size="20"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="view" id="view-settings">
+      <div class="view-inner">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title" data-i18n="tabs.settings"></h1>
+            <p class="page-description" data-i18n="pages.settingsDescription"></p>
+          </div>
+        </div>
+
+        <div class="settings">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="settings.appearance"></h2>
+                <p class="card-description" data-i18n="settings.appearanceDescription"></p>
+              </div>
+            </div>
+            <div class="card-content field-grid">
+              <div>
+                <label class="label" for="set-language" data-i18n="settings.language"></label>
+                <select class="select" id="set-language">
+                  <option value="en">English</option>
+                  <option value="sr">Srpski</option>
+                </select>
+              </div>
+              <div>
+                <label class="label" for="set-theme" data-i18n="settings.theme"></label>
+                <select class="select" id="set-theme">
+                  <option value="system" data-i18n="settings.themeSystem"></option>
+                  <option value="dark" data-i18n="settings.themeDark"></option>
+                  <option value="light" data-i18n="settings.themeLight"></option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="settings.startup"></h2>
+                <p class="card-description" data-i18n="settings.startupDescription"></p>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="switch-row">
+                <div>
+                  <label class="label" for="set-start-fullscreen" data-i18n="settings.startFullscreen"></label>
+                  <p class="hint" data-i18n="settings.startFullscreenHint"></p>
+                </div>
+                <input class="switch" type="checkbox" role="switch" id="set-start-fullscreen" />
+              </div>
+              <div class="switch-row">
+                <div>
+                  <label class="label" for="set-launch-startup" data-i18n="settings.launchOnStartup"></label>
+                  <p class="hint" data-i18n="settings.launchOnStartupHint"></p>
+                </div>
+                <input class="switch" type="checkbox" role="switch" id="set-launch-startup" />
+              </div>            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="settings.keybinds"></h2>
+                <p class="card-description" data-i18n="settings.keybindsDescription"></p>
+              </div>
+              <button class="btn btn-outline btn-sm card-meta" id="reset-keybinds" data-i18n="settings.resetKeybinds"></button>
+            </div>
+            <div class="card-content keybind-grid" id="keybinds"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="settings.downloads"></h2>
+                <p class="card-description" data-i18n="settings.downloadsDescription"></p>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="field">
+                <label class="label" for="set-dir" data-i18n="settings.downloadDir"></label>
+                <div class="row">
+                  <input class="input" type="text" id="set-dir" readonly />
+                  <button class="btn btn-outline" id="set-dir-choose"><i data-icon="folder-open"></i><span data-i18n="settings.change"></span></button>
+                </div>
+              </div>
+              <div class="switch-row">
+                <div>
+                  <label class="label" for="set-mp4" data-i18n="settings.mp4Only"></label>
+                  <p class="hint" data-i18n="settings.mp4OnlyHint"></p>
+                </div>
+                <input class="switch" type="checkbox" role="switch" id="set-mp4" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="settings.sources"></h2>
+                <p class="card-description" data-i18n="settings.sourcesDescription"></p>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="field">
+                <label class="label" for="set-tmdb" data-i18n="settings.tmdbKey"></label>
+                <div class="row">
+                  <input class="input" type="password" id="set-tmdb" autocomplete="off" spellcheck="false" data-i18n-placeholder="settings.tmdbKeyPlaceholder" />
+                  <button class="btn btn-outline" id="tmdb-get-key" type="button"><i data-icon="link"></i><span data-i18n="settings.tmdbGetKey"></span></button>
+                </div>
+                <p class="hint field-hint" data-i18n="settings.tmdbHint"></p>
+              </div>
+              <div class="switch-row">
+                <div>
+                  <label class="label" for="set-archive">Internet Archive</label>
+                  <p class="hint" data-i18n="settings.archiveHint"></p>
+                </div>
+                <input class="switch" type="checkbox" role="switch" id="set-archive" />
+              </div>
+              <div class="switch-row block">
+                <div class="label" data-i18n="settings.indexers"></div>
+                <p class="hint spaced"><span data-i18n="settings.indexerHint"></span> <code>http://127.0.0.1:9117/api/v2.0/indexers/all/results/torznab/api</code></p>
+                <div id="indexers"></div>
+                <button class="btn btn-outline btn-sm" id="add-indexer"><i data-icon="plus"></i><span data-i18n="settings.addIndexer"></span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button class="btn btn-default" id="save-settings" data-i18n="settings.save"></button>
+          </div>
+          <p class="hint" data-i18n="settings.legal"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toasts" id="toasts"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Simplified mark for small sizes (tray, 16-32 px): tile + play, no perforations. -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#18181b"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="13.25" fill="none" stroke="#52525b" stroke-width="1.5"/>
+  <path d="M25 19 L45 32 L25 45 Z" fill="#fafafa" stroke="#fafafa" stroke-width="6" stroke-linejoin="round"/>
+</svg>

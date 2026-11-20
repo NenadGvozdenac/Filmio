@@ -1,0 +1,7 @@
+{
+  "name": "ip",
+  "version": "2.0.1-filmio",
+  "description": "Minimal replacement for the unmaintained 'ip' package (GHSA-2p57-rm9w-gvfp). Only toString() is used, by bittorrent-tracker's UDP server parser.",
+  "main": "index.js",
+  "license": "MIT"
+}
