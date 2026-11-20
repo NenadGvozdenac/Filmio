@@ -15,7 +15,7 @@ export function registerIpcRoutes(ipcMain, { downloads, live, settings, system, 
     'downloads:remove': (p) => downloads.remove(p),
 
     'live:channels': (p) => live.channels(p),
-    'live:toggleFavorite': (p) => live.toggleFavorite(p),
+    'live:open': (p) => live.open(p),
 
     'settings:get': () => settings.get(),
     'settings:update': (p) => settings.update(p),

@@ -15,7 +15,6 @@ export function loadConfig(app) {
       launchOnStartup: false,
       tmdbApiKey: '',
       playlists: [],
-      favoriteChannels: [],
     },
     progressIntervalMs: 1000,
   };

@@ -51,7 +51,6 @@ export class Settings {
     keybinds = DEFAULT_KEYBINDS,
     tmdbApiKey = '',
     playlists = [],
-    favoriteChannels = [],
   }) {
     if (!downloadDir) throw new AppError(ErrorCode.DOWNLOAD_DIR_REQUIRED, 'Download folder is required');
     this.downloadDir = String(downloadDir);
@@ -62,9 +61,6 @@ export class Settings {
     this.keybinds = normalizeKeybinds(keybinds);
     this.tmdbApiKey = String(tmdbApiKey ?? '').trim().slice(0, 512); // v3 key or v4 read access token (posters)
     this.playlists = normalizePlaylists(playlists);
-    this.favoriteChannels = (Array.isArray(favoriteChannels) ? favoriteChannels : [])
-      .filter((id) => /^[a-f0-9]{16}$/.test(id))
-      .slice(0, 1000);
   }
 
   /** Returns a new Settings with the given fields replaced. */
@@ -74,10 +70,10 @@ export class Settings {
 
   toJSON() {
     const {
-      downloadDir, language, theme, startFullscreen, launchOnStartup, keybinds, tmdbApiKey, playlists, favoriteChannels,
+      downloadDir, language, theme, startFullscreen, launchOnStartup, keybinds, tmdbApiKey, playlists,
     } = this;
     return {
-      downloadDir, language, theme, startFullscreen, launchOnStartup, keybinds, tmdbApiKey, playlists, favoriteChannels,
+      downloadDir, language, theme, startFullscreen, launchOnStartup, keybinds, tmdbApiKey, playlists,
     };
   }
 }

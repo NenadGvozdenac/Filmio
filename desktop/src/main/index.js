@@ -81,7 +81,7 @@ async function bootstrap() {
   };
   registerIpcRoutes(ipcMain, {
     downloads: new DownloadController(downloadService),
-    live: new LiveTvController(liveTvService),
+    live: new LiveTvController(liveTvService, { appRoot: app.getAppPath(), getWindow: () => mainWindow }),
     settings: new SettingsController(settingsService, startupService, onSettingsChanged),
     system: new SystemController(() => mainWindow, settingsService),
     window: new WindowController(() => mainWindow),

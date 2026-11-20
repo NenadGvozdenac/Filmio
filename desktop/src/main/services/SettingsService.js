@@ -1,5 +1,5 @@
 const EDITABLE_FIELDS = [
-  'downloadDir', 'language', 'theme', 'startFullscreen', 'launchOnStartup', 'keybinds', 'tmdbApiKey', 'playlists', 'favoriteChannels',
+  'downloadDir', 'language', 'theme', 'startFullscreen', 'launchOnStartup', 'keybinds', 'tmdbApiKey', 'playlists',
 ];
 
 export class SettingsService {

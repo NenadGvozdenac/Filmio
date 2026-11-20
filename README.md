@@ -35,7 +35,10 @@ This installs dependencies (on first run) and launches the app. Other targets:
 | -------------- | ------------------------------- |
 | `make install` | Install desktop dependencies    |
 | `make start`   | Run the desktop app             |
-| `make clean`   | Remove `node_modules`           |
+| `make exe`     | Build the Windows installer: `desktop/dist/Filmio-Setup-<version>.exe` |
+| `make clean`   | Remove `node_modules` and `dist` |
+
+The installer lets you pick the install folder and creates desktop and Start menu shortcuts. It is not code-signed, so Windows SmartScreen may show "Windows protected your PC" the first time; choose **More info → Run anyway**. Native modules ship prebuilt N-API binaries, so no Visual Studio is needed (`npmRebuild: false`).
 
 Without Make:
 

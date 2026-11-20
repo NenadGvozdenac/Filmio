@@ -1,7 +1,7 @@
 import { invoke } from '../api/ipcClient.js';
 
-/** Channels of all enabled M3U playlists: { channels, errors, playlistCount }. */
+/** Built-in channels plus channels of all enabled M3U playlists: { channels, errors }. */
 export const getChannels = ({ refresh = false } = {}) => invoke('live:channels', { refresh });
 
-/** Toggles a favorite channel; resolves with the new state (true = favorite). */
-export const toggleFavorite = (id) => invoke('live:toggleFavorite', { id });
+/** Opens a channel that is watched on the broadcaster's own page (window or browser). */
+export const openChannelPage = (id) => invoke('live:open', { id });

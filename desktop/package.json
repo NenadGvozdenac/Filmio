@@ -2,13 +2,15 @@
   "name": "filmio",
   "productName": "Filmio",
   "version": "1.0.0",
-  "description": "Desktop app for searching, downloading and watching movies and series over BitTorrent",
+  "description": "Torrent client, player and live TV for movies and series",
+  "author": "Filmio",
   "main": "src/main/index.js",
   "type": "module",
   "private": true,
   "scripts": {
     "start": "electron .",
-    "icons": "electron scripts/build-icons.mjs"
+    "icons": "electron scripts/build-icons.mjs",
+    "dist": "electron-builder --win nsis"
   },
   "license": "ISC",
   "dependencies": {
@@ -18,9 +20,40 @@
     "webtorrent": "^3.0.21"
   },
   "devDependencies": {
-    "electron": "^45.4.1"
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
   },
   "overrides": {
     "ip": "file:./shims/ip"
+  },
+  "build": {
+    "appId": "app.filmio.desktop",
+    "productName": "Filmio",
+    "npmRebuild": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Filmio",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "artifactName": "Filmio-Setup-${version}.${ext}"
+    }
   }
 }

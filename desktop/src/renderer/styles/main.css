@@ -384,35 +384,37 @@ details.collapsible > summary:hover { background: hsl(var(--muted) / 0.4); }
 .live-search { flex: 0 1 320px; }
 .live-group { width: auto; min-width: 180px; }
 .live-status { display: flex; flex-direction: column; gap: 6px; color: hsl(var(--muted-foreground)); font-size: 13px; margin-bottom: 16px; }
-.channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-.channel-card {
-  position: relative;
+.channel-list { overflow: hidden; }
+.channel-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 14px;
+  padding: 10px 16px;
+  border-top: 1px solid hsl(var(--border));
   cursor: pointer;
-  transition: border-color .15s, background-color .15s;
+  transition: background-color .15s;
 }
-.channel-card:hover, .channel-card:focus-visible { border-color: hsl(var(--ring) / 0.5); background: hsl(var(--muted) / 0.4); }
+.channel-row:first-child { border-top: 0; }
+.channel-row:hover, .channel-row:focus-visible { background: hsl(var(--muted) / 0.4); outline: none; }
 .channel-logo {
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  width: 64px;
+  width: 72px;
   height: 44px;
   border-radius: calc(var(--radius) - 2px);
   background: hsl(var(--muted));
   color: hsl(var(--muted-foreground));
   overflow: hidden;
 }
-.channel-logo img { max-width: 56px; max-height: 38px; object-fit: contain; }
-.channel-info { min-width: 0; flex: 1; padding-right: 24px; }
-.channel-name { font-weight: 500; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.channel-logo img { max-width: 60px; max-height: 34px; object-fit: contain; }
+/* Logos often have black text, so image tiles stay light in both themes. */
+.channel-logo.has-image { background: #f4f4f5; border: 1px solid hsl(var(--border)); }
+.channel-monogram { font-weight: 700; font-size: 13px; color: hsl(var(--foreground)); letter-spacing: -0.01em; }
+.channel-info { flex: 1; min-width: 0; }
+.channel-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .channel-group { color: hsl(var(--muted-foreground)); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.channel-star { position: absolute; top: 6px; right: 6px; color: hsl(var(--muted-foreground)); }
-.channel-star.active { color: hsl(var(--warning)); }
-.channel-star.active .icon { fill: currentColor; }
+.channel-live { color: #ef4444; border-color: hsl(0 84% 60% / 0.4); }
 .playlist-row {
   display: grid;
   grid-template-columns: auto 180px minmax(0, 1fr) auto;
