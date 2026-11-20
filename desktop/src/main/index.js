@@ -1,4 +1,6 @@
 // Electron main process entry point: wires repositories, services and controllers together.
+import fs from 'node:fs';
+import path from 'node:path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { loadConfig } from './config/index.js';
 import { JsonFileStore } from './repositories/JsonFileStore.js';
@@ -12,10 +14,7 @@ import { StreamService } from './services/StreamService.js';
 import { DownloadService } from './services/DownloadService.js';
 import { MetadataService } from './services/MetadataService.js';
 import { StartupService } from './services/StartupService.js';
-import { HlsProxyService } from './services/HlsProxyService.js';
-import { LiveTvService } from './services/LiveTvService.js';
 import { DownloadController } from './controllers/DownloadController.js';
-import { LiveTvController } from './controllers/LiveTvController.js';
 import { SettingsController } from './controllers/SettingsController.js';
 import { SystemController } from './controllers/SystemController.js';
 import { WindowController } from './controllers/WindowController.js';
@@ -29,7 +28,6 @@ let mainWindow = null;
 let torrentService = null;
 let streamService = null;
 let settingsService = null;
-let hlsProxy = null;
 let tray = null;
 
 // Groups the taskbar button and notifications under Filmio's own icon on Windows.
@@ -46,6 +44,7 @@ async function bootstrap() {
   const settingsRepository = new SettingsRepository(store, config.defaultSettings);
   const downloadRepository = new DownloadRepository(store);
   const torrentFileRepository = new TorrentFileRepository(config.torrentCacheDir);
+  removeLiveTvLeftovers(store);
 
   // Services
   settingsService = new SettingsService(settingsRepository);
@@ -66,9 +65,6 @@ async function bootstrap() {
     onReady: (infoHash) => metadataService.enrich(infoHash),
   });
   const startupService = new StartupService(app);
-  hlsProxy = new HlsProxyService();
-  await hlsProxy.start();
-  const liveTvService = new LiveTvService({ settingsService, proxy: hlsProxy });
 
   // Controllers + routes
   let tmdbKey = settingsService.get().tmdbApiKey;
@@ -81,7 +77,6 @@ async function bootstrap() {
   };
   registerIpcRoutes(ipcMain, {
     downloads: new DownloadController(downloadService),
-    live: new LiveTvController(liveTvService, { appRoot: app.getAppPath(), getWindow: () => mainWindow }),
     settings: new SettingsController(settingsService, startupService, onSettingsChanged),
     system: new SystemController(() => mainWindow, settingsService),
     window: new WindowController(() => mainWindow),
@@ -119,6 +114,26 @@ if (isPrimaryInstance) {
   });
 }
 
+/**
+ * Removes data of the former Live TV (Yettel TV) feature: the encrypted account, the learned
+ * channel links, the Yettel web session and the Widevine module. Does nothing once cleaned up.
+ */
+function removeLiveTvLeftovers(store) {
+  if (store.get('credentials')) store.set('credentials', undefined);
+  const settings = store.get('settings');
+  if (settings?.yettelChannels) {
+    const { yettelChannels, ...rest } = settings;
+    store.set('settings', rest);
+  }
+  for (const dir of [path.join(config.dataDir, 'Partitions', 'yettel-tv'), path.join(config.dataDir, 'WidevineCdm')]) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+    } catch (err) {
+      console.error('[cleanup]', err.message);
+    }
+  }
+}
+
 let quitting = false;
 
 /** Creates the main window. Closing it quits Filmio completely (see window-all-closed). */
@@ -153,7 +168,6 @@ app.on('before-quit', (event) => {
   quitting = true;
   for (const win of BrowserWindow.getAllWindows()) win.destroy();
   streamService?.stop();
-  hlsProxy?.stop();
   tray?.destroy();
   const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
   Promise.race([torrentService.destroy(), timeout]).finally(() => app.exit(0));

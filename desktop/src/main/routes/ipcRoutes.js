@@ -3,7 +3,7 @@
  * Every response is wrapped as { ok: true, data } or { ok: false, error: { code, message, params } }
  * so the renderer can translate errors (Electron otherwise prefixes the messages).
  */
-export function registerIpcRoutes(ipcMain, { downloads, live, settings, system, window }, logger = console) {
+export function registerIpcRoutes(ipcMain, { downloads, settings, system, window }, logger = console) {
   const routes = {
     'downloads:add': (p) => downloads.add(p),
     'downloads:list': () => downloads.list(),
@@ -14,8 +14,6 @@ export function registerIpcRoutes(ipcMain, { downloads, live, settings, system, 
     'downloads:startSeeding': (p) => downloads.startSeeding(p),
     'downloads:remove': (p) => downloads.remove(p),
 
-    'live:channels': (p) => live.channels(p),
-    'live:open': (p) => live.open(p),
 
     'settings:get': () => settings.get(),
     'settings:update': (p) => settings.update(p),
@@ -23,7 +21,6 @@ export function registerIpcRoutes(ipcMain, { downloads, live, settings, system, 
     'system:chooseDirectory': () => system.chooseDirectory(),
     'system:openVideo': () => system.openVideo(),
     'system:openTorrentFiles': () => system.openTorrentFiles(),
-    'system:openPlaylistFile': () => system.openPlaylistFile(),
     'system:openDownloadFolder': () => system.openDownloadFolder(),
     'system:showInFolder': (p) => system.showInFolder(p),
     'system:openExternal': (p) => system.openExternal(p),

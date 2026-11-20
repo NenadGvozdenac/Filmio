@@ -28,18 +28,6 @@ function normalizeKeybinds(keybinds) {
   return result;
 }
 
-/** Live TV playlists: { name, url (http(s) URL or local .m3u path), enabled }. */
-function normalizePlaylists(playlists) {
-  return (Array.isArray(playlists) ? playlists : [])
-    .map((p) => ({
-      name: String(p?.name ?? '').trim().slice(0, 100),
-      url: String(p?.url ?? '').trim().slice(0, 2048),
-      enabled: p?.enabled !== false,
-    }))
-    .filter((p) => p.url)
-    .map((p) => ({ ...p, name: p.name || p.url.split(/[\\/]/).filter(Boolean).pop() || 'Playlist' }));
-}
-
 /** User settings. */
 export class Settings {
   constructor({
@@ -50,7 +38,6 @@ export class Settings {
     launchOnStartup = false,
     keybinds = DEFAULT_KEYBINDS,
     tmdbApiKey = '',
-    playlists = [],
   }) {
     if (!downloadDir) throw new AppError(ErrorCode.DOWNLOAD_DIR_REQUIRED, 'Download folder is required');
     this.downloadDir = String(downloadDir);
@@ -60,7 +47,6 @@ export class Settings {
     this.launchOnStartup = !!launchOnStartup; // start with the operating system
     this.keybinds = normalizeKeybinds(keybinds);
     this.tmdbApiKey = String(tmdbApiKey ?? '').trim().slice(0, 512); // v3 key or v4 read access token (posters)
-    this.playlists = normalizePlaylists(playlists);
   }
 
   /** Returns a new Settings with the given fields replaced. */
@@ -70,10 +56,10 @@ export class Settings {
 
   toJSON() {
     const {
-      downloadDir, language, theme, startFullscreen, launchOnStartup, keybinds, tmdbApiKey, playlists,
+      downloadDir, language, theme, startFullscreen, launchOnStartup, keybinds, tmdbApiKey,
     } = this;
     return {
-      downloadDir, language, theme, startFullscreen, launchOnStartup, keybinds, tmdbApiKey, playlists,
+      downloadDir, language, theme, startFullscreen, launchOnStartup, keybinds, tmdbApiKey,
     };
   }
 }
