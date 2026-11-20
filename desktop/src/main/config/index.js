@@ -14,7 +14,6 @@ export function loadConfig(app) {
       startFullscreen: false,
       launchOnStartup: false,
       tmdbApiKey: '',
-      playlists: [],
     },
     progressIntervalMs: 1000,
   };

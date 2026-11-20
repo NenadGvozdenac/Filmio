@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: https: http:; media-src 'self' file: blob: data: http://127.0.0.1:*; connect-src 'self' http://127.0.0.1:*" />
+    content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: https://image.tmdb.org; media-src 'self' file: http://127.0.0.1:*; connect-src 'self'" />
   <title>Filmio</title>
   <link rel="stylesheet" href="../../node_modules/@fontsource-variable/inter/index.css" />
   <link rel="stylesheet" href="styles/main.css" />
@@ -19,7 +19,6 @@
     <nav class="sidebar-group" id="nav">
       <button class="nav-item active" data-tab="add"><i data-icon="plus"></i><span data-i18n="tabs.add"></span></button>
       <button class="nav-item" data-tab="library"><i data-icon="library"></i><span data-i18n="tabs.library"></span></button>
-      <button class="nav-item" data-tab="live"><i data-icon="radio-tower"></i><span data-i18n="tabs.live"></span></button>
       <button class="nav-item" data-tab="downloads"><i data-icon="download"></i><span data-i18n="tabs.downloads"></span><span class="nav-badge" id="downloads-count" hidden></span></button>
       <button class="nav-item" data-tab="player"><i data-icon="monitor-play"></i><span data-i18n="tabs.player"></span></button>
     </nav>
@@ -80,31 +79,6 @@
       </div>
     </section>
 
-    <!-- Live TV (channels from M3U playlists) -->
-    <section class="view" id="view-live">
-      <div class="view-inner">
-        <div class="page-header">
-          <div>
-            <h1 class="page-title" data-i18n="tabs.live"></h1>
-            <p class="page-description" data-i18n="pages.liveDescription"></p>
-          </div>
-          <div class="header-actions">
-            <button class="btn btn-outline" id="live-yettel"><i data-icon="external-link"></i><span data-i18n="live.yettel"></span></button>
-            <button class="btn btn-outline btn-icon" id="live-refresh" data-i18n-title="live.refresh"><i data-icon="refresh-cw"></i></button>
-          </div>
-        </div>
-        <div class="toolbar live-toolbar">
-          <div class="input-group live-search">
-            <i data-icon="search"></i>
-            <input class="input" type="search" id="live-search" data-i18n-placeholder="live.searchPlaceholder" autocomplete="off" />
-          </div>
-          <select class="select live-group" id="live-group" hidden></select>
-        </div>
-        <div class="live-status" id="live-status"></div>
-        <div id="live-list"></div>
-        <div class="empty" id="live-empty" hidden></div>
-      </div>
-    </section>
 
     <!-- Downloads -->
     <section class="view" id="view-downloads">
@@ -158,7 +132,6 @@
               <input class="slider" type="range" id="volume" min="0" max="1" step="0.05" value="1" />
             </div>
             <span class="time" id="time">0:00 / 0:00</span>
-            <span class="live-badge" data-i18n="player.live"></span>
             <span class="spacer"></span>
             <select class="select" id="episode" data-i18n-title="player.episode"></select>
             <select class="select" id="speed" data-i18n-title="player.speed">
@@ -264,23 +237,6 @@
                   <button class="btn btn-outline" id="set-dir-choose"><i data-icon="folder-open"></i><span data-i18n="settings.change"></span></button>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <h2 class="card-title" data-i18n="settings.liveTv"></h2>
-                <p class="card-description" data-i18n="settings.liveTvDescription"></p>
-              </div>
-            </div>
-            <div class="card-content">
-              <div id="playlists"></div>
-              <div class="row">
-                <button class="btn btn-outline btn-sm" id="add-playlist" type="button"><i data-icon="plus"></i><span data-i18n="settings.addPlaylist"></span></button>
-                <button class="btn btn-outline btn-sm" id="add-playlist-file" type="button"><i data-icon="folder-open"></i><span data-i18n="settings.addPlaylistFile"></span></button>
-              </div>
-              <p class="hint field-hint" data-i18n="settings.liveTvHint"></p>
             </div>
           </div>
 

@@ -2,7 +2,6 @@
 import { initTabs } from './views/tabs.js';
 import { initAddView } from './views/addView.js';
 import { initLibraryView } from './views/libraryView.js';
-import { initLiveView } from './views/liveView.js';
 import { initDownloadsView } from './views/downloadsView.js';
 import { initPlayerView } from './views/playerView.js';
 import { initSettingsView } from './views/settingsView.js';
@@ -70,7 +69,6 @@ async function main() {
 
   initAddView({ play });
   initLibraryView({ play });
-  initLiveView({ playLive: (channel, list) => player.playLive(channel, list) });
   initDownloadsView({ play });
   initSettingsView(settings);
 }
